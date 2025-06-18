@@ -39,33 +39,24 @@ function BlockedPoints.saveBlockedPoints()
     end
 end
 
-function BlockedPoints.addBlockedPoint(x, y)
-    for _, point in ipairs(blocked_points_table) do
-        if point.x == x and point.y == y then
-            return -- Point already exists
-        end
-    end
-    table.insert(blocked_points_table, {x = x, y = y})
-    BlockedPoints.saveBlockedPoints()
-end
-
-function BlockedPoints.removeBlockedPoint(x, y)
-    for i, point in ipairs(blocked_points_table) do
-        if point.x == x and point.y == y then
-            table.remove(blocked_points_table, i)
-            BlockedPoints.saveBlockedPoints()
-            return
-        end
-    end
-end
-
 function BlockedPoints.isBlocked(x, y)
     for _, point in ipairs(blocked_points_table) do
-        if point.x == x and point.y == y then
+        local distance = math.sqrt((x - point.x)^2 + (y - point.y)^2)
+        if distance <= point.radius then
             return true
         end
     end
     return false
+end
+
+function BlockedPoints.clearAllPoints()
+    blocked_points_table = {}
+    BlockedPoints.saveBlockedPoints()
+end
+
+function BlockedPoints.replaceBlockedPoints(points_list)
+    blocked_points_table = points_list
+    BlockedPoints.saveBlockedPoints()
 end
 
 -- Initialize by loading blocked points

@@ -15,6 +15,7 @@ local logger = require("logger") -- 用于日志记录
 local InputContainer = require("ui/widget/container/inputcontainer") -- 用于触摸区域
 local Device = require("device")
 local Screen = Device.screen
+local BlockedPoints = require("ui/blockedpoints")
 
 -- Helper function for safe logging
 local function safe_log(level, ...)
@@ -325,6 +326,16 @@ function GhostTouchRecorder:_stopRecordingAndHideOverlay(forced_stop)
         self.settings:saveSetting("is_recording", false)
         self.settings:flush()
         safe_log("info", self.name .. ": Settings updated - is_recording: false.")
+
+        local recorded_gestures = self.settings:readSetting("recorded_points") or {}
+        local radius = self.settings:readSetting("block_radius_pixels") or self.defaults.block_radius_pixels
+        local points_for_blocking = {}
+        for _, gesture_point in ipairs(recorded_gestures) do
+            local new_point = {x = gesture_point.x, y = gesture_point.y, radius = radius}
+            table.insert(points_for_blocking, new_point)
+        end
+        BlockedPoints.replaceBlockedPoints(points_for_blocking)
+        safe_log("info", self.name .. ": Transferred " .. #points_for_blocking .. " points to BlockedPoints with radius " .. radius)
     end
 
     if self.record_timer then
@@ -361,16 +372,17 @@ end
 
 -- 清除所有已记录的点
 function GhostTouchRecorder:_clearRecordedPoints()
+    BlockedPoints.clearAllPoints() -- Clear from the global blocking system
     local UIManager = self:_getUIManager()
-    self.settings:saveSetting("recorded_points", {})
+    self.settings:saveSetting("recorded_points", {}) -- Clear local cache if any
     self.settings:flush()
     if UIManager then
         UIManager:show(InfoMessage:new{
-            text = _("所有已记录的鬼触点已清除。"),
+            text = _("所有已记录的鬼触点已从系统中清除。"), -- Updated message
             timeout = 2,
         })
     end
-    safe_log("info", self.name .. ": All recorded points cleared.")
+    safe_log("info", self.name .. ": All recorded points cleared from BlockedPoints and local settings.") -- Updated log
 end
 
 -- 提示用户输入屏蔽半径
