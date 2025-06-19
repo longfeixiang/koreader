@@ -14,6 +14,7 @@ local time = require("ui/time")
 local _ = require("gettext")
 local Input = Device.input
 local Screen = Device.screen
+local JSON = require("tools/dkjson")
 
 local DEFAULT_FULL_REFRESH_COUNT = 6
 
@@ -1417,12 +1418,15 @@ end
 -- NOTE: The Event hook mechanism used to dispatch for *every* event, and would actually pass the event along.
 --       We've simplified that to once per input frame, and without passing anything (as we, in fact, have never made use of it).
 function UIManager:handleInputEvent(input_event)
-    -- Check for blocked points before processing the event
-    if type(input_event) == "table" and input_event.pos and type(input_event.pos.x) == "number" and type(input_event.pos.y) == "number" then
-        if BlockedPoints:isBlocked(input_event.pos.x, input_event.pos.y) then
-            logger.dbg("UIManager: Blocked input event at", input_event.pos.x, input_event.pos.y)
-            return -- Stop processing this event
-        end
+    if not input_event then return false end
+    local success, output = pcall(JSON.encode, input_event.args[1].pos)
+    -- print("BlockedPoints: ", output)
+    -- 检查事件是否包含坐标，并且该坐标是否应被屏蔽
+    if input_event.args[1] and BlockedPoints.isBlocked(input_event.args[1].pos) then
+        -- 如果是“鬼触”，我们返回 true。
+        -- 在 UIManager 的上下文中，返回 true 意味着“此事件已被处理”，
+        -- 这会阻止它被传递给后续的任何部分（如手势检测），从而实现屏蔽。
+        return true
     end
 
     local handler = self.event_handlers[input_event]

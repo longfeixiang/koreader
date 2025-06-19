@@ -1,10 +1,30 @@
-local BlockedPoints = {}
+local BlockedPoints = {
+    name = "BlockedPoints"
+}
 
 local blocked_points_table = {}
 
+-- {"handler":"onGesture","args":[{"ges":"touch","pos":{"h":0,"x":26,"w":0,"y":836},"time":2496472712432}]}
+
 -- Requires G_reader_settings and json.lua
 -- G_reader_settings is a global, no need to require it.
-local JSON = require("json")
+local JSON = require("tools/dkjson")
+local logger = require("logger") -- 用于日志记录
+local inspect = require("tools/inspect")
+
+-- Helper function for safe logging
+local function safe_log(level, ...)
+    if logger and type(logger[level]) == "function" then
+        logger[level](...)
+    else
+        local parts = { os.date("%Y-%m-%d %H:%M:%S"), "Fallback Log:", level }
+        local args = { ... }
+        for i = 1, #args do
+            table.insert(parts, tostring(args[i]))
+        end
+        print(table.concat(parts, " "))
+    end
+end
 
 function BlockedPoints.loadBlockedPoints()
     if not G_reader_settings then
@@ -39,9 +59,10 @@ function BlockedPoints.saveBlockedPoints()
     end
 end
 
-function BlockedPoints.isBlocked(x, y)
+function BlockedPoints.isBlocked(pos)
+    safe_log("info", BlockedPoints.name .. inspect(pos))
     for _, point in ipairs(blocked_points_table) do
-        local distance = math.sqrt((x - point.x)^2 + (y - point.y)^2)
+        local distance = math.sqrt((pos.x - point.x) ^ 2 + (pos.y - point.y) ^ 2)
         if distance <= point.radius then
             return true
         end
