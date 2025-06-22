@@ -14,7 +14,7 @@ local time = require("ui/time")
 local _ = require("gettext")
 local Input = Device.input
 local Screen = Device.screen
-local JSON = require("tools/dkjson")
+local JSON = require("dkjson")
 
 local DEFAULT_FULL_REFRESH_COUNT = 6
 

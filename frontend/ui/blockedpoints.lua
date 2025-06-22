@@ -8,9 +8,9 @@ local blocked_points_table = {}
 
 -- Requires G_reader_settings and json.lua
 -- G_reader_settings is a global, no need to require it.
-local JSON = require("tools/dkjson")
+local JSON = require("dkjson")
 local logger = require("logger") -- 用于日志记录
-local inspect = require("tools/inspect")
+local inspect = require("inspect")
 
 -- Helper function for safe logging
 local function safe_log(level, ...)
